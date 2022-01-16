@@ -1,6 +1,6 @@
 # MNIST Games
 
-This is my implementation of the MultiStep MNIST Game from [Learning to Communicate with Deep Multi-Agent Reinforcement Learning](https://arxiv.org/abs/1605.06676) using Python and Torch. The interactive notebook can also be found in kaggle in the following [link]().
+This is my implementation of the MultiStep MNIST Game from [Learning to Communicate with Deep Multi-Agent Reinforcement Learning](https://arxiv.org/abs/1605.06676) using Python and Torch.
 
 ## Results reporduction
 
