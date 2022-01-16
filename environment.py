@@ -51,16 +51,15 @@ class MNISTEnv():
     """This class represents the environment in which the experiments will take
     place. It records the train and test stats.
     """
-    def __init__(self, conf, writer=None, seed=1234): 
+    def __init__(self, conf, seed=1234): 
         np.random.seed(seed)
         self.conf = conf
         self.device = conf.device
         self.stats = []
-        self.writer = writer
         self.test_stats = []
         
 
-    def train(self, agents, verbose=False):
+    def train(self, agents):
         """This function trains the given agents running the number of episodes
         defined in self.conf. Also it saves the information for each episode;
         the variables that are saved are indicated in the get_data() function
@@ -70,23 +69,15 @@ class MNISTEnv():
         for n_episode in range(self.conf.n_episodes):
             episode_stats = self.run_episode(agents)
             ep_loss = self.make_agents_learn(agents, episode_stats, n_episode)
-            if self.writer is not None:
-                for idx, agent in enumerate(agents):
-                    for name, weight in agent.model.named_parameters():
-                        # Log the weights' values and grads histograms
-                        self.writer.add_histogram(f"{name}/value", weight.data, n_episode)
-                        self.writer.add_histogram(f"{name}/grad", weight.grad, n_episode)
-                self.writer.add_scalar(f"NormReward", episode_stats.final_reward.sum()/self.conf.bs, n_episode)
-                self.writer.add_scalar(f"Loss", ep_loss, n_episode)
 
             episode_stats.episode_loss = ep_loss
 
             self.stats.append(episode_stats.get_data())
-            if (n_episode+1) % self.conf.show_results == 0:
+            if (n_episode+1) % self.conf.test_freq == 0:
                 test_episode = self.run_episode(agents, train_mode=False)
                 self.test_stats.append(test_episode.get_data())
-                if (n_episode+1) % 200 == 0:
-                    print(f"Mean Test Reward of {test_episode.final_reward.sum()/self.conf.bs:.3f} at episode {n_episode}")
+                if (n_episode+1) % self.conf.show_results == 0:
+                    print(f"Mean Test Reward of {test_episode.final_reward.sum()/self.conf.bs:.3f} at episode {n_episode+1}")
 
 
     def make_agents_learn(self, agents, episode_stats, n_episode):
@@ -100,8 +91,6 @@ class MNISTEnv():
             if (not self.conf.model_know_share) or (idx == 0):
                 agent_loss = agent.learn_from_episode(episode_stats)
                 ep_loss += agent_loss
-                if self.writer is not None:
-                    self.writer.add_scalar(f"Loss/agent{idx}", agent_loss, n_episode)
 
         for idx, agent in enumerate(agents):
                 # do this only once if model_know_share

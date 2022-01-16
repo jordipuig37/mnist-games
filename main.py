@@ -40,7 +40,7 @@ def read_conf(path):
     f.close()
     conf.total_action_space = conf.n_actions + conf.comm_space
     conf.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    conf.show_results = 10  # modificable
+    conf.show_results = int(conf.n_episodes / 10)
     return conf
 
 
@@ -68,7 +68,7 @@ def generate_param_combinations(base_conf, parameter_id):
     return param_comb
 
 
-def make_trials(conf, return_test=False, seed=0):
+def make_trials(conf, conf_info, return_test=False, seed=0):
     """This function performs the number of trials specified in conf. Each
     trial consist of a full training cycle of the number of epochs specified
     in conf. It returns the training data of all the trials. If return_test is 
@@ -77,8 +77,9 @@ def make_trials(conf, return_test=False, seed=0):
     torch.manual_seed(seed)
     results = list()
     test_results = list()
+    print(f"Running trials for configuration {conf_info}")
     for trial in range(conf.n_trials):
-        environment = MNISTEnv(conf, writer=None)
+        environment = MNISTEnv(conf)
         agents = create_agents(conf)
         environment.train(agents)
         df = pd.DataFrame(environment.stats)
@@ -91,7 +92,7 @@ def make_trials(conf, return_test=False, seed=0):
     return results, None
 
 
-def test_different_configs(hparams_configurations, return_test=False, seed=0):
+def test_different_configs(hparams_configurations, parameter, return_test=False, seed=0):
     """This function executes the number of trials specified in the
     configuration for each combination of hyper parameters in hparams_configurations.
     It returns the training data of all the trials for each configuration.
@@ -99,7 +100,8 @@ def test_different_configs(hparams_configurations, return_test=False, seed=0):
     """
     all_results = list()
     for conf in hparams_configurations:
-        conf_results, test_results = make_trials(conf, return_test=return_test, seed=seed)
+        conf_info = f"{parameter} = {conf[parameter]}"
+        conf_results, test_results = make_trials(conf, conf_info, return_test=return_test, seed=seed)
         
         if return_test:
             all_results.append((conf, conf_results, test_results))
@@ -124,7 +126,7 @@ def main(args, **kwargs):
     base_conf = read_conf(args.conf_file)
     hparams_configurations = generate_param_combinations(base_conf, args.parameter)
 
-    all_results = test_different_configs(hparams_configurations, return_test=True)
+    all_results = test_different_configs(hparams_configurations, args.parameter, return_test=True)
     
     formatted_data = select_data(all_results, return_test=True)
 
@@ -137,13 +139,11 @@ def main(args, **kwargs):
     plot_different_confs(formatted_data, args.parameter, factor_size=1.2, Ws=window_size, with_test=True)
     plt.savefig("results.jpg", bbox_inches="tight", pad_inches=0.25)
 
-    
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-conf", "--conf-file", type=str, help="The file in which the configuration for our experimets is stored.")
-    parser.add_argument("-parameter", type=str, help="The parameter we want to iterate")
+    parser.add_argument("-parameter", type=str, default="gamma", help="The parameter we want to iterate")
     parser.add_argument("-v", "--verbose", nargs='?', const=True, default=False)
     args = parser.parse_args()
 

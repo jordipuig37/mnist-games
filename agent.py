@@ -39,7 +39,6 @@ class AgentNet(nn.Module):
 
         self.rnn = nn.RNN(conf.emb_dim, conf.rnn_size, num_layers=conf.rnn_layers, batch_first=True)
 
-        # architecure copied from the original paper
         self.action = nn.Sequential(
             nn.Dropout(0.5),
             nn.Linear(conf.rnn_size, conf.rnn_size),
@@ -143,13 +142,13 @@ class PlayerMNIST():
         """This function returns a loss that can be backpropageted through the
         agents' networks.
         """
-        total_loss = torch.zeros(self.conf.bs, device=self.device)  # compute the loss for each element of the batch
+        # compute the loss for each element of the batch
+        total_loss = torch.zeros(self.conf.bs, device=self.device)
         for agent_idx in range(self.conf.n_agents):
             for step in range(self.conf.steps):
                 # L(.) = (r + gamma* max(Q_t(s+1, a+1)) - Q(s, a))**2
                 r = episode.total_reward[step] 
                 qsa = episode.step_records[step][agent_idx].action_value  # the q value for the action selected
-                # if DIAL:
                 if step==self.conf.steps-1:
                     td_action = r - qsa
                 else:
@@ -170,6 +169,6 @@ class PlayerMNIST():
         loss = self.episode_loss(episode_record)
         loss.backward(retain_graph=not self.conf.model_know_share)  # retain graph because we don't share parameters
         clip_grad_norm_(parameters=self.model.parameters(), max_norm=10)
-        # self.optimizer.step()
+        # the optimization step will be done later
 
         return loss.item()

@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import copy
 import torch
 
-# utils
 def print_verbose(msg, verbose):
     if verbose:
         print(msg)
@@ -14,6 +13,7 @@ class DotDic(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
 
     def __deepcopy__(self, memo=None):
         return DotDic(copy.deepcopy(dict(self), memo=memo))
@@ -27,6 +27,7 @@ class DRU:
         self.hard = hard
         self.device = device
 
+
     def regularize(self, m):    
         m_reg = m + torch.randn(m.size(), device=self.device) * self.sigma
         if self.comm_narrow:
@@ -34,6 +35,7 @@ class DRU:
         else:
             m_reg = torch.softmax(m_reg, 0)
         return m_reg
+
 
     def discretize(self, m):
         if self.hard:
@@ -58,11 +60,13 @@ class DRU:
             else:
                 return torch.softmax(m * scale, -1)
 
+
     def forward(self, m, train_mode):
         if train_mode:
             return self.regularize(m)
         else:
             return self.discretize(m)
+
 
     def __call__(self, m, train_mode):
         return self.forward(m, train_mode)
@@ -82,7 +86,6 @@ def plot_trials_same_conf(all_results, conf, label="", Ws=10):
     all_df = all_df.reset_index()
     rewards_columns = list(filter(lambda x: "norm_rewards" in x, all_df.columns))
     mean_rewards = all_df[rewards_columns].mean(axis=1)
-
     smoothed = np.convolve(mean_rewards, 1/Ws*np.ones(Ws), mode="valid")
     plt.plot(smoothed, label=label)
 
@@ -109,13 +112,10 @@ def plot_different_confs(all_results, parameter, Ws=10, factor_size=1.5, with_te
         ticks_label = list(range(0, n_episodes+1, show_results*jumps))
         ticks = list(range(0, int(n_episodes/show_results)+1, jumps))
         plt.xticks(ticks=ticks, labels=ticks_label)
-
-
     else:
         for conf, res in all_results:
             plot_trials_same_conf(res, f"{parameter} = {conf[parameter]}", Ws)
 
-    
     plt.xlabel("Epoch")
     plt.ylabel(f"Smoothed Normalized reward\n(window size={Ws})")
 
