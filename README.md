@@ -14,12 +14,12 @@ source games-env/bin/activate
 pip install -r requirements.txt
 ```
 
-* To replicate the experiments changing the __sigma__:
+* To replicate the experiments varying the __sigma__:
 ```
 python main.py -conf conf.json -parameter sigma
 ```
 
-* To replicate the experiments changing the __gamma__:
+* To replicate the experiments varying the __gamma__:
 ```
 python main.py -conf conf.json -parameter gamma
 ```
