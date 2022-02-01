@@ -4,7 +4,7 @@ This is my implementation of the MultiStep MNIST Game from [Learning to Communic
 
 ## Results reporduction
 
-In order to obtain the results showed in __ execute the following commands:
+In order to obtain the results showed in [the report](AI_to_AI_Communication.pdf) execute the following commands:
 
 * Set up the environment:
 
